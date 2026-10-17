@@ -5,9 +5,15 @@ import { AppProvider } from "@shopify/shopify-app-react-router/react";
 import { NavMenu } from "@shopify/app-bridge-react";
 
 import { authenticate } from "../shopify.server";
+import { PLAN_NAME } from "../billing.config";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  await authenticate.admin(request);
+  const { billing } = await authenticate.admin(request);
+  const isTest = process.env.BILLING_TEST_MODE !== "false";
+  await billing.require({
+    plans: [PLAN_NAME],
+    onFailure: () => billing.request({ plan: PLAN_NAME, isTest }),
+  });
 
   // eslint-disable-next-line no-undef
   return { apiKey: process.env.SHOPIFY_API_KEY || "" };

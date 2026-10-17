@@ -7,6 +7,13 @@ import {
 import { PrismaSessionStorage } from "@shopify/shopify-app-session-storage-prisma";
 import prisma from "./db.server";
 import { EngineRequestError, postToEngine } from "./engine.server";
+import { BillingInterval } from "@shopify/shopify-app-react-router/server";
+import {
+  PLAN_AMOUNT,
+  PLAN_CURRENCY,
+  PLAN_NAME,
+  TRIAL_DAYS,
+} from "./billing.config";
 
 const shopify = shopifyApp({
   apiKey: process.env.SHOPIFY_API_KEY,
@@ -17,6 +24,18 @@ const shopify = shopifyApp({
   authPathPrefix: "/auth",
   sessionStorage: new PrismaSessionStorage(prisma),
   distribution: AppDistribution.AppStore,
+  billing: {
+    [PLAN_NAME]: {
+      lineItems: [
+        {
+          amount: PLAN_AMOUNT,
+          currencyCode: PLAN_CURRENCY,
+          interval: BillingInterval.Every30Days,
+        },
+      ],
+      trialDays: TRIAL_DAYS,
+    },
+  },
   hooks: {
     afterAuth: async ({ session }) => {
       for (let attempt = 0; attempt < 3; attempt += 1) {
